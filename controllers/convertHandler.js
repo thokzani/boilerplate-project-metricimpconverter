@@ -1,75 +1,93 @@
 'use strict';
 
-// Define the ConvertHandler class
+// Create a ConvertHandler class
 function ConvertHandler() {
   
-  // Method to extract numerical part from input
+  // Method to parse and extract the numerical part of the input
   this.getNum = function(input) {
-    // Regular expression to match the numerical part of the input
-    const numRegex = /^(\d+(\.\d+)?)(\/\d+(\.\d+)?)?/;
-    // Extract numerical part from input
-    const result = input.match(numRegex);
-    // If no numerical part is found or if it's an invalid fraction, return default 1
-    if (!result) {
-      return 1;
-    }
-    // Parse and return the numerical part
-    return eval(result[1]);
+    // Define a regular expression to match a valid number format
+    const numberRegex = /^\d+(\.\d+)?(\/\d+(\.\d+)?)?$/;
+    // Use regex to match the number part of the input
+    const numMatch = input.match(numberRegex);
+    
+    // If no valid number is provided, default to 1
+    if (!numMatch) return 1;
+    
+    // Extract the number string from the match
+    const numString = numMatch[0];
+    // Split the number string by '/' to handle fractions
+    const parts = numString.split('/');
+    
+    // If there are more than two parts (double fraction), return 'invalid number'
+    if (parts.length > 2) return 'invalid number';
+    
+    // Evaluate the number string to get the result
+    const result = eval(numString);
+    
+    return result;
   };
   
-  // Method to extract unit part from input
+  // Method to extract and validate the unit part of the input
   this.getUnit = function(input) {
-    // Regular expression to match the unit part of the input
-    const unitRegex = /[a-zA-Z]+$/;
-    // Extract unit part from input
-    const result = input.match(unitRegex);
-    // If no unit part is found or if it's an invalid unit, return null
-    if (!result) {
-      return null;
-    }
-    // Convert unit to lowercase and return
-    return result[0].toLowerCase();
+    // Define a regular expression to match alphabetic characters
+    const unitRegex = /[a-zA-Z]+/;
+    // Use regex to match the unit part of the input
+    const unitMatch = input.match(unitRegex);
+    // Extract the unit string from the match or return null if no unit is provided
+    const unit = unitMatch ? unitMatch[0] : null;
+    
+    // If no unit is provided, return 'invalid unit'
+    if (!unit) return 'invalid unit';
+    
+    // Define an array of valid units
+    const validUnits = ['gal', 'l', 'lbs', 'kg', 'mi', 'km'];
+    // Convert the unit to lower case and check if it's valid
+    if (!validUnits.includes(unit.toLowerCase())) return 'invalid unit';
+    
+    // Return the unit in lower case
+    return unit.toLowerCase();
   };
   
-  // Method to get the return unit
+  // Method to get the return unit for a given initial unit
   this.getReturnUnit = function(initUnit) {
-    // Define conversion map for different units
+    // Define a mapping of units and their corresponding return units
     const unitMap = {
-      gal: 'l',
-      l: 'gal',
-      lbs: 'kg',
-      kg: 'lbs',
-      mi: 'km',
-      km: 'mi'
+      'gal': 'l',
+      'l': 'gal',
+      'lbs': 'kg',
+      'kg': 'lbs',
+      'mi': 'km',
+      'km': 'mi'
     };
-    // Lookup and return the return unit based on the initial unit
-    return unitMap[initUnit];
+    // Get the return unit from the mapping, converting both units to lower case
+    return unitMap[initUnit.toLowerCase()];
   };
 
-  // Method to spell out unit
+  // Method to spell out the unit in full
   this.spellOutUnit = function(unit) {
-    // Define unit spellings
-    const unitSpellings = {
-      gal: 'gallons',
-      l: 'liters',
-      lbs: 'pounds',
-      kg: 'kilograms',
-      mi: 'miles',
-      km: 'kilometers'
+    // Define a mapping of units and their spelled-out versions
+    const unitMap = {
+      'gal': 'gallons',
+      'l': 'liters',
+      'lbs': 'pounds',
+      'kg': 'kilograms',
+      'mi': 'miles',
+      'km': 'kilometers'
     };
-    // Lookup and return the spelled out unit
-    return unitSpellings[unit];
+    // Get the spelled-out version of the unit, converting it to lower case
+    return unitMap[unit.toLowerCase()];
   };
   
-  // Method to perform conversion
+  // Method to perform the conversion between units
   this.convert = function(initNum, initUnit) {
-    // Define conversion factors
+    // Define conversion factors for different units
     const galToL = 3.78541;
     const lbsToKg = 0.453592;
     const miToKm = 1.60934;
     let result;
-    // Perform conversion based on the initial unit
-    switch (initUnit) {
+    
+    // Perform the conversion based on the initial unit
+    switch (initUnit.toLowerCase()) {
       case 'gal':
         result = initNum * galToL;
         break;
@@ -88,21 +106,20 @@ function ConvertHandler() {
       case 'km':
         result = initNum / miToKm;
         break;
-      default:
-        result = null;
     }
-    // Round result to 5 decimal places
+    
+    // Return the result rounded to 5 decimals
     return parseFloat(result.toFixed(5));
   };
   
-  // Method to format the string
+  // Method to generate the output string
   this.getString = function(initNum, initUnit, returnNum, returnUnit) {
-    // Get spelled out units
-    const initSpellOut = this.spellOutUnit(initUnit);
-    const returnSpellOut = this.spellOutUnit(returnUnit);
-    // Construct the string based on conversion
-    const resultString = `${initNum} ${initSpellOut} converts to ${returnNum} ${returnSpellOut}`;
-    return resultString;
+    // Get the spelled-out versions of the units
+    const initUnitString = this.spellOutUnit(initUnit);
+    const returnUnitString = this.spellOutUnit(returnUnit);
+    
+    // Construct and return the output string
+    return `${initNum} ${initUnitString} converts to ${returnNum} ${returnUnitString}`;
   };
   
 }
