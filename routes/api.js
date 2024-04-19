@@ -1,54 +1,42 @@
 "use strict";
 
-// Require the ConvertHandler module
-const ConvertHandler = require("../controllers/convertHandler");
+const expect = require("chai").expect;
+const ConvertHandler = require("../controllers/convertHandler.js");
 
-// Export a function that takes an Express app as a parameter
 module.exports = function (app) {
-  // Create an instance of ConvertHandler
-  const convertHandler = new ConvertHandler();
+  let convertHandler = new ConvertHandler();
 
-  // Define a route handler for the /api/convert endpoint
   app.route("/api/convert").get((req, res) => {
-    // Get the input query parameter from the request
-    const input = req.query.input;
+    // console.log({ input: req.query.input });
+    if (req.query.input === undefined || req.query.input === "") {
+      res.status(404).type("text").send("invalid unit");
+    } else {
+      let str = String(req.query.input);
+      let initUnit, initNum;
+      let errors = [];
+      try {
+        initUnit = convertHandler.getUnit(str);
+      } catch (err) {
+        errors.push(err.message);
+      }
 
-    // Get the numerical value from the input
-    const initNum = convertHandler.getNum(input);
+      try {
+        initNum = convertHandler.getNum(str);
+        if (errors.length > 0) return res.send(errors[0]);
+      } catch (err) {
+        if (errors.length === 0) return res.send(err.message);
+        return res.send(`${err.message} and unit`);
+      }
 
-    // Get the unit from the input
-    const initUnit = convertHandler.getUnit(input);
-
-    // If both the number and unit are invalid, respond with an error message
-    if (!initNum && !initUnit) {
-      res.json({ error: "invalid number and unit" });
-    } 
-    // If the number is invalid, respond with an error message
-    else if (!initNum) {
-      res.json({ error: "invalid number" });
-    } 
-    // If the unit is invalid, respond with an error message
-    else if (!initUnit) {
-      res.json({ error: "invalid unit" });
-    } 
-    // If both the number and unit are valid, perform the conversion
-    else {
-      // Convert the initial number and unit to the return number
-      const returnNum = convertHandler.convert(initNum, initUnit);
-      
-      // Get the return unit based on the initial unit
-      const returnUnit = convertHandler.getReturnUnit(initUnit);
-      
-      // Get the string representation of the conversion result
-      const string = convertHandler.getString(initNum, initUnit, returnNum, returnUnit);
-
-      // Respond with JSON containing the conversion details
+      let returnNum = convertHandler.convert(initNum, initUnit);
+      let returnUnit = convertHandler.getReturnUnit(initUnit);
+      let string = convertHandler.getString(initNum, initUnit, returnNum, returnUnit);
       res.json({
-        initNum: initNum,
-        initUnit: initUnit,
-        returnNum: returnNum,
-        returnUnit: returnUnit,
-        string: string
+        initNum,
+        initUnit,
+        returnNum,
+        returnUnit,
+        string,
       });
     }
   });
