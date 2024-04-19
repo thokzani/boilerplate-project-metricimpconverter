@@ -1,50 +1,47 @@
-"use strict"; // Require the ConvertHandler module
+'use strict';
 
-var ConvertHandler = require("../controllers/convertHandler"); // Export a function that takes an Express app as a parameter
+var express = require('express');
 
+var router = express.Router();
 
-module.exports = function (app) {
-  // Create an instance of ConvertHandler
-  var convertHandler = new ConvertHandler(); // Define a route handler for the /api/convert endpoint
+var ConvertHandler = require('../controllers/convertHandler');
 
-  app.route("/api/convert").get(function (req, res) {
-    // Get the input query parameter from the request
-    var input = req.query.input; // Get the numerical value from the input
+var convertHandler = new ConvertHandler();
+router.get('/convert', function (req, res) {
+  var input = req.query.input;
 
-    var initNum = convertHandler.getNum(input); // Get the unit from the input
+  if (!input) {
+    return res.status(400).json({
+      error: 'No input provided'
+    });
+  }
 
-    var initUnit = convertHandler.getUnit(input); // If both the number and unit are invalid, respond with an error message
+  var initNum = convertHandler.getNum(input);
+  var initUnit = convertHandler.getUnit(input);
 
-    if (!initNum && !initUnit) {
-      res.json({
-        error: "invalid number and unit"
-      });
-    } // If the number is invalid, respond with an error message
-    else if (!initNum) {
-        res.json({
-          error: "invalid number"
-        });
-      } // If the unit is invalid, respond with an error message
-      else if (!initUnit) {
-          res.json({
-            error: "invalid unit"
-          });
-        } // If both the number and unit are valid, perform the conversion
-        else {
-            // Convert the initial number and unit to the return number
-            var returnNum = convertHandler.convert(initNum, initUnit); // Get the return unit based on the initial unit
+  if (initNum === 'invalid number' && initUnit === 'invalid unit') {
+    return res.status(400).json({
+      error: 'Invalid number and unit'
+    });
+  } else if (initNum === 'invalid number') {
+    return res.status(400).json({
+      error: 'Invalid number'
+    });
+  } else if (initUnit === 'invalid unit') {
+    return res.status(400).json({
+      error: 'Invalid unit'
+    });
+  }
 
-            var returnUnit = convertHandler.getReturnUnit(initUnit); // Get the string representation of the conversion result
-
-            var string = convertHandler.getString(initNum, initUnit, returnNum, returnUnit); // Respond with JSON containing the conversion details
-
-            res.json({
-              initNum: initNum,
-              initUnit: initUnit,
-              returnNum: returnNum,
-              returnUnit: returnUnit,
-              string: string
-            });
-          }
+  var returnNum = convertHandler.convert(initNum, initUnit);
+  var returnUnit = convertHandler.getReturnUnit(initUnit);
+  var string = convertHandler.getString(initNum, initUnit, returnNum, returnUnit);
+  res.json({
+    initNum: initNum,
+    initUnit: initUnit,
+    returnNum: returnNum,
+    returnUnit: returnUnit,
+    string: string
   });
-};
+});
+module.exports = router;
